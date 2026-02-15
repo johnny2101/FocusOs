@@ -3,6 +3,7 @@ package com.example.focusos.di
 import android.content.Context
 import androidx.room.Room
 import com.example.focusos.data.local.AppDatabase
+import com.example.focusos.data.local.dao.ConfigDao
 import com.example.focusos.data.local.dao.UsageDao
 import dagger.Module
 import dagger.Provides
@@ -27,6 +28,11 @@ class DatabaseModule {
     @Provides
     fun provideUsageDao(database: AppDatabase): UsageDao {
         return database.usageDao()
+    }
+
+    @Provides
+    fun provideConfigDao(database: AppDatabase): ConfigDao {
+        return database.configDao()
     }
 
 }
