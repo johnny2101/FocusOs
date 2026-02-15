@@ -2,6 +2,7 @@ package com.example.focusos.data.repository
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import com.example.focusos.domain.model.AppItem
 import com.example.focusos.domain.repository.AppLauncherRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,6 +29,19 @@ class AppLauncherRepositoryImpl @Inject constructor(
             val label = resolveInfo.loadLabel(pm).toString()
             AppItem(label, packageName)
         }.sortedBy { it.label.lowercase() }
+    }
 
+    override fun launchApp(packageName: String) {
+        try {
+            val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            } else {
+                Toast.makeText(context, "App not found", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

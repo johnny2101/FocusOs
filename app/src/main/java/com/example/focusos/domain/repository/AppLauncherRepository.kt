@@ -4,4 +4,5 @@ import com.example.focusos.domain.model.AppItem
 
 interface AppLauncherRepository {
     suspend fun getInstalledApps(): List<AppItem>
+    fun launchApp(packageName: String)
 }
