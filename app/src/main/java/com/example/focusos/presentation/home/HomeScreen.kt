@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,39 +21,49 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.focusos.presentation.components.FrictionDialog
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val apps by viewModel.apps.collectAsState()
+    val apps by viewModel.appList.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val frictionPackage by viewModel.frictionState.collectAsState()
+
     val context = LocalContext.current
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(color = Color.White)
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                items(apps) { app ->
-                    AppItemView(
-                        label = app.label,
-                        onClick = {
-                            val launchIntent =
-                                context.packageManager.getLaunchIntentForPackage(app.packageName)
-                            if (launchIntent != null) {
-                                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                context.startActivity(launchIntent)
+    Scaffold(
+        containerColor = Color.Black
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.Red)
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    items(apps) { app ->
+                        AppItemView(
+                            label = app.label,
+                            onClick = {
+                                viewModel.onAppClick(app.packageName)
                             }
-                        }
+                        )
+                    }
+                }
+
+                frictionPackage?.let { packageName ->
+                    FrictionDialog(
+                        packageName = packageName,
+                        onDismiss = viewModel::onFrictionDismissed,
+                        onSuccess = viewModel::onFrictionPassed
                     )
                 }
             }
