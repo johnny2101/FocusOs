@@ -71,15 +71,15 @@ fun HomeScreen(
                             AppItemView(
                                 label = app.label,
                                 onClick = {
-                                    viewModel.onAppClick(app.packageName)
+                                    viewModel.onAppClick(app)
                                 }
                             )
                         }
                     }
 
-                    frictionPackage?.let { packageName ->
+                    frictionPackage?.let { appItem ->
                         FrictionDialog(
-                            packageName = packageName,
+                            packageName = appItem.packageName,
                             onDismiss = viewModel::onFrictionDismissed,
                             onSuccess = viewModel::onFrictionPassed
                         )
