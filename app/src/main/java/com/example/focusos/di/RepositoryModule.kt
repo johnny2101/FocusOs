@@ -2,8 +2,10 @@ package com.example.focusos.di
 
 import com.example.focusos.data.repository.AppLauncherRepositoryImpl
 import com.example.focusos.data.repository.ConfigRepositoryImpl
+import com.example.focusos.data.repository.UsageRepositoryImpl
 import com.example.focusos.domain.repository.AppLauncherRepository
 import com.example.focusos.domain.repository.ConfigRepository
+import com.example.focusos.domain.repository.UsageRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -24,5 +26,11 @@ abstract class RepositoryModule {
     abstract fun bindConfigRepository(
         impl: ConfigRepositoryImpl
     ): ConfigRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUsageRepository(
+        impl: UsageRepositoryImpl
+    ): UsageRepository
 
 }
