@@ -1,14 +1,11 @@
 package com.example.focusos.domain.usecase
 
 import com.example.focusos.data.local.entity.EventType
+import com.example.focusos.domain.model.AnxietyState
 import com.example.focusos.domain.repository.UsageRepository
 import javax.inject.Inject
 
-enum class AnxietyState {
-    NORMAL,
-    WARNING,
-    LOCKDOWN
-}
+
 
 class AnalyzeAnxietyUseCase @Inject constructor(
     private val usageRepository: UsageRepository

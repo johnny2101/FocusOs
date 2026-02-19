@@ -13,30 +13,34 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.IBinder
-import android.util.StatsLog.logEvent
 import androidx.core.app.NotificationCompat
 import com.example.focusos.MainActivity
 import com.example.focusos.R
 import com.example.focusos.data.local.entity.EventType
+import com.example.focusos.domain.model.AnxietyState
+import com.example.focusos.domain.repository.ConfigRepository
 import com.example.focusos.domain.repository.UsageRepository
 import com.example.focusos.domain.usecase.AnalyzeAnxietyUseCase
-import com.example.focusos.domain.usecase.AnxietyState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.jvm.java
 
 @AndroidEntryPoint
 class BackgroundMonitorService : Service() {
 
-    @Inject lateinit var usageRepository: UsageRepository
-    @Inject lateinit var analyzeAnxietyUseCase: AnalyzeAnxietyUseCase
+    @Inject
+    lateinit var usageRepository: UsageRepository
+    @Inject
+    lateinit var analyzeAnxietyUseCase: AnalyzeAnxietyUseCase
+    @Inject
+    lateinit var configRepository: ConfigRepository
 
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
@@ -72,7 +76,7 @@ class BackgroundMonitorService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val intent = Intent(this,MainActivity::class.java).apply {
+        val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
@@ -97,7 +101,7 @@ class BackgroundMonitorService : Service() {
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
-            val notificationManager : NotificationManager =
+            val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
@@ -167,13 +171,25 @@ class BackgroundMonitorService : Service() {
             if (state != AnxietyState.NORMAL) {
                 handleAnxietyState(state)
             }
+
         }
     }
 
-    private fun handleAnxietyState(state: AnxietyState) {
-        var notificationManager= getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private suspend fun handleAnxietyState(state: AnxietyState) {
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = createNotification(state)
         notificationManager.notify(NOTIFICATION_ID, notification)
+
+        if(state == AnxietyState.LOCKDOWN) {
+            val currentEndTime = configRepository.getLockdownEndTimeFlow().first()
+            val now = System.currentTimeMillis()
+
+            if (now > currentEndTime) {
+                val lockdownDurationMs = 1 * 60 * 1000L
+                configRepository.setLockdownEndTime(now + lockdownDurationMs)
+            }
+        }
     }
 
     private fun createNotification(state: AnxietyState = AnxietyState.NORMAL): Notification {
@@ -183,7 +199,7 @@ class BackgroundMonitorService : Service() {
             AnxietyState.LOCKDOWN -> "LOCKDOWN IMMINENT"
         }
 
-        val text = when(state) {
+        val text = when (state) {
             AnxietyState.NORMAL -> "Monitoring usage patterns..."
             AnxietyState.WARNING -> "Take a deep breath."
             AnxietyState.LOCKDOWN -> "Stop scrolling."
