@@ -18,4 +18,8 @@ class UsageRepositoryImpl @Inject constructor(
         )
         usageDao.insertEvent(event)
     }
+
+    override suspend fun getEventsSince(timestamp: Long): List<AppUsageEvent> {
+        return usageDao.getEventsSince(timestamp)
+    }
 }

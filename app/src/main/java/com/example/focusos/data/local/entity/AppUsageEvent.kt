@@ -6,7 +6,10 @@ import androidx.room.PrimaryKey
 enum class EventType {
     APP_LAUNCH,
     BLOCKED_ATTEMPT,
-    FRICTION_PASSED
+    FRICTION_PASSED,
+    SCREEN_UNLOCK,
+    SCREEN_OFF,
+    APP_SWITCH
 }
 
 @Entity(tableName = "app_usage_events")

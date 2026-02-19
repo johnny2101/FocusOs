@@ -14,4 +14,7 @@ interface UsageDao {
 
     @Query("SELECT * FROM app_usage_events WHERE timestamp BETWEEN :startTime AND :endTime ORDER BY timestamp DESC")
     suspend fun getEventsInRange(startTime: Long, endTime: Long): List<AppUsageEvent>
+
+    @Query("SELECT * FROM app_usage_events WHERE timestamp >= :startTime ORDER BY  timestamp DESC")
+    suspend fun getEventsSince(startTime: Long): List<AppUsageEvent>
 }
