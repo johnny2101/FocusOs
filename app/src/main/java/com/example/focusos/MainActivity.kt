@@ -1,13 +1,16 @@
 package com.example.focusos
 
 import android.Manifest
+import android.app.AppOpsManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -30,7 +33,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            startMonitorService()
+            checkUsageStatsAndStartService()
         }
     }
 
@@ -38,7 +41,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        checkPermissionsAndStartService()
+        checkPermissionsSequence()
 
         setContent {
             var showSettings by remember { mutableStateOf(false) }
@@ -57,6 +60,42 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    }
+
+    private fun checkPermissionsSequence() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                checkUsageStatsAndStartService()
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            checkUsageStatsAndStartService()
+        }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (hasUsageStatsPermission()) {
+            startMonitorService()
+        }
+    }
+
+    private fun hasUsageStatsPermission(): Boolean {
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOps.checkOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            android.os.Process.myUid(),
+            packageName
+        )
+
+        return mode == AppOpsManager.MODE_ALLOWED
     }
 
     private fun checkPermissionsAndStartService() {
@@ -79,6 +118,15 @@ class MainActivity : ComponentActivity() {
             startForegroundService(intent)
         } else {
             startService(intent)
+        }
+    }
+
+    private fun checkUsageStatsAndStartService() {
+        if(!hasUsageStatsPermission()) {
+            Toast.makeText(this, "FocusOS needs Usage Access to monitor anxiety", Toast.LENGTH_LONG).show()
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        } else {
+            startMonitorService()
         }
     }
 }
