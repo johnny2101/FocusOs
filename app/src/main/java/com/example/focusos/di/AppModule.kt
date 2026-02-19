@@ -1,14 +1,20 @@
 package com.example.focusos.di
 
-import com.example.focusos.data.repository.AppLauncherRepositoryImpl
-import com.example.focusos.domain.repository.AppLauncherRepository
-import dagger.Binds
+import android.content.Context
+import android.content.SharedPreferences
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AppModule {
+class AppModule {
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
+        return context.getSharedPreferences("focusos_prefs", Context.MODE_PRIVATE)
+    }
 }
