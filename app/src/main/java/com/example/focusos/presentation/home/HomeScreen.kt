@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -33,6 +34,8 @@ fun HomeScreen(
     val apps by viewModel.appList.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val frictionPackage by viewModel.frictionState.collectAsState()
+    val lockdownRemainingTime by viewModel.lockdownRemainingTime.collectAsState()
+    val isLockdownActive = lockdownRemainingTime > 0
 
     val context = LocalContext.current
 
@@ -40,6 +43,7 @@ fun HomeScreen(
         containerColor = Color.Black
     ) { innerPadding ->
         Column {
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,6 +58,24 @@ fun HomeScreen(
                     modifier = Modifier.clickable { onOpenSettings() }
                 )
             }
+
+            if (isLockdownActive) {
+                val minutes = lockdownRemainingTime / 1000 / 60
+                val seconds = (lockdownRemainingTime / 1000) % 60
+                val timeString = String.format(
+                    "%02d:%02d",
+                    minutes,
+                    seconds
+                )
+
+                Text(
+                    text = "Focus restoring in $timeString",
+                    color = Color.Red,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
