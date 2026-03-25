@@ -1,27 +1,21 @@
 package com.example.focusos
 
-import android.Manifest
-import android.app.AppOpsManager
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.focusos.presentation.MainViewModel
 import com.example.focusos.presentation.home.HomeScreen
+import com.example.focusos.presentation.onboarding.OnboardingScreen
 import com.example.focusos.presentation.settings.SettingsScreen
 import com.example.focusos.service.BackgroundMonitorService
 import com.example.focusos.ui.theme.FocusOsTheme
@@ -29,85 +23,58 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            checkUsageStatsAndStartService()
-        }
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        checkPermissionsSequence()
-
         setContent {
-            var showSettings by remember { mutableStateOf(false) }
+            val viewModel: MainViewModel = hiltViewModel()
+            val navController = rememberNavController()
+
+            // Start the background service immediately if onboarding is already complete
+            if (viewModel.startDestination == "home") {
+                startMonitorService()
+            }
+
             FocusOsTheme {
                 Surface(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     color = Color.Black
                 ) {
-                    if (showSettings) {
-                        SettingsScreen(onBack = { showSettings = false })
-                    } else {
-                        HomeScreen(onOpenSettings = { showSettings = true })
+                    NavHost(
+                        navController = navController,
+                        startDestination = viewModel.startDestination
+                    ) {
+                        composable("onboarding") {
+                            // Instantiate the ViewModel scoped to this navigation route
+                            val onboardingViewModel: com.example.focusos.presentation.onboarding.OnboardingViewModel = hiltViewModel()
+
+                            OnboardingScreen(
+                                viewModel = onboardingViewModel,
+                                onOnboardingFinished = {
+                                    // Start service once permissions are granted
+                                    startMonitorService()
+                                    // Navigate to home and prevent returning to onboarding
+                                    navController.navigate("home") {
+                                        popUpTo("onboarding") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
+                        composable("home") {
+                            HomeScreen(
+                                onOpenSettings = { navController.navigate("settings") }
+                            )
+                        }
+
+                        composable("settings") {
+                            SettingsScreen(
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
                     }
                 }
-            }
-        }
-
-    }
-
-    private fun checkPermissionsSequence() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                checkUsageStatsAndStartService()
-            } else {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        } else {
-            checkUsageStatsAndStartService()
-        }
-
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        if (hasUsageStatsPermission()) {
-            startMonitorService()
-        }
-    }
-
-    private fun hasUsageStatsPermission(): Boolean {
-        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOps.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            android.os.Process.myUid(),
-            packageName
-        )
-
-        return mode == AppOpsManager.MODE_ALLOWED
-    }
-
-    private fun checkPermissionsAndStartService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                startMonitorService()
-            } else {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
@@ -120,14 +87,4 @@ class MainActivity : ComponentActivity() {
             startService(intent)
         }
     }
-
-    private fun checkUsageStatsAndStartService() {
-        if(!hasUsageStatsPermission()) {
-            Toast.makeText(this, "FocusOS needs Usage Access to monitor anxiety", Toast.LENGTH_LONG).show()
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-        } else {
-            startMonitorService()
-        }
-    }
 }
-
