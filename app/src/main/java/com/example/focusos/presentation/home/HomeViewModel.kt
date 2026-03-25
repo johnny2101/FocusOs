@@ -64,7 +64,7 @@ class HomeViewModel @Inject constructor(
 
     private fun startLockDownTicker() {
         viewModelScope.launch {
-            configRepository.getLockdownEndTimeFlow().collect() { endTime ->
+            configRepository.getLockdownEndTimeFlow().collect { endTime ->
                 while (true) {
                     val remaining = endTime - System.currentTimeMillis()
                     if (remaining > 0) {
