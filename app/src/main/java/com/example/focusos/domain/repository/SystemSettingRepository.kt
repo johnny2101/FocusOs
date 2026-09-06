@@ -6,9 +6,11 @@ interface SystemSettingRepository {
 
     fun isDefaultHomeLauncher(): Boolean
 
-    fun hasNotificationPermission(): Boolean
-
     fun isOnboardingComplete(): Boolean
 
     suspend fun setOnboardingComplete(complete: Boolean)
+
+    fun hasAccessibilityPermission(): Boolean
+    fun hasNotificationPermission(): Boolean
+
 }

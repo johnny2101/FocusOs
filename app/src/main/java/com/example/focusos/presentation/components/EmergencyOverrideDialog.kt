@@ -1,6 +1,5 @@
 package com.example.focusos.presentation.components
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,21 +34,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-private val FRICTION_QUOTES = listOf(
-    "Dopamine is not happiness.",
-    "Is this urgent?",
-    "You are trading your life for pixels.",
-    "Breathe. Read. Decide.",
-    "The cost of this app is your attention."
-)
-
 @Composable
-fun FrictionDialog(
-    packageName: String,
+fun EmergencyOverrideDialog(
     onDismiss: () -> Unit,
     onSuccess: () -> Unit
 ) {
-    val quote = remember { FRICTION_QUOTES.random() }
+    val exactPhrase = "I accept the consequences of breaking my focus. It's for a good reason"
     var text by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
 
@@ -58,8 +48,8 @@ fun FrictionDialog(
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false,
-            dismissOnClickOutside = false,
-            dismissOnBackPress = true
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
         )
     ) {
         Box(
@@ -74,14 +64,19 @@ fun FrictionDialog(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = quote,
-                    style = TextStyle(
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontFamily = FontFamily.Monospace,
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold
-                    ),
+                    text = "EMERGENCY OVERRIDE",
+                    color = Color.Red,
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Text(
+                    text = exactPhrase,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
 
@@ -92,17 +87,17 @@ fun FrictionDialog(
                         isError = false
                     },
                     textStyle = TextStyle(
-                        color = if (isError) Color.Red else Color.Green,
-                        fontSize = 18.sp,
+                        color = if (isError) Color.Red else Color.White,
+                        fontSize = 16.sp,
                         fontFamily = FontFamily.Monospace,
                         textAlign = TextAlign.Center
                     ),
-                    cursorBrush = SolidColor(Color.Green),
+                    cursorBrush = SolidColor(Color.Red),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            if (text.trim().equals(quote, ignoreCase = true)) {
+                            if (text.trim() == exactPhrase) {
                                 onSuccess()
                             } else {
                                 isError = true
@@ -120,25 +115,23 @@ fun FrictionDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = if (isError) "Incorrect. Try again." else "Type the phrase above to unlock.",
-                    style = TextStyle(
-                        color = Color.Gray,
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
+                    text = if (isError) "Exact match required. Case and punctuation matter." else "Type the exact phrase above to force unlock.",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
 
                 TextButton(onClick = onDismiss) {
                     Text(
-                        text = "I don't need this.",
+                        text = "Cancel Override",
                         color = Color.Gray,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = FontFamily.Monospace,
                     )
                 }
             }
         }
     }
-
 }

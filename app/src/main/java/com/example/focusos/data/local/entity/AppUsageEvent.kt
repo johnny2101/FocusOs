@@ -9,7 +9,8 @@ enum class EventType {
     FRICTION_PASSED,
     SCREEN_UNLOCK,
     SCREEN_OFF,
-    APP_SWITCH
+    APP_SWITCH,
+    EMERGENCY_OVERRIDE
 }
 
 @Entity(tableName = "app_usage_events")

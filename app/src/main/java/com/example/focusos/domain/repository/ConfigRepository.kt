@@ -9,4 +9,9 @@ interface ConfigRepository {
 
     suspend fun setLockdownEndTime(timeInMillis: Long)
     fun getLockdownEndTimeFlow(): Flow<Long>
+
+    suspend fun setLatestWeeklyReport(report: String)
+
+    fun getLatestWeeklyReportFlow(): Flow<String?>
+
 }

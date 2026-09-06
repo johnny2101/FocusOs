@@ -59,7 +59,7 @@ fun OnboardingScreen(
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is OnboardingState.Complete) {
+        if (uiState is OnboardingState.NavigatingToHome) {
             onOnboardingFinished()
         }
     }
@@ -119,6 +119,25 @@ fun OnboardingScreen(
                     )
                 }
 
+                is OnboardingState.NeedsAccessibility -> {
+                    val launcher = rememberLauncherForActivityResult(
+                        RequestPermission()
+                    ) { isGranted ->
+                        viewModel.onEvent(OnboardingEvent.CheckPermissions)
+                    }
+
+
+
+                    PermissionStep(
+                        title = "The Gatekeeper",
+                        description = "FocusOS needs Accessibility access to instantly detect when you open a high-dopamine app. This uses zero battery in the background.\n\nPlease find 'FocusOS Monitor' and turn it on.",
+                        buttonText = "Enable Accessibility",
+                        onClick = {
+                            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        }
+                    )
+                }
+
                 OnboardingState.Complete -> {
                     PermissionStep(
                         title = "System Ready",
@@ -128,6 +147,10 @@ fun OnboardingScreen(
                             viewModel.onEvent(OnboardingEvent.FinishOnboarding)
                         }
                     )
+                }
+
+                OnboardingState.NavigatingToHome -> {
+                    // Handle navigation to home screen
                 }
             }
 

@@ -1,15 +1,15 @@
 package com.example.focusos.data.repository
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.example.focusos.data.local.dao.ConfigDao
 import com.example.focusos.data.local.entity.AppConfiguration
 import com.example.focusos.domain.model.AppTier
 import com.example.focusos.domain.repository.ConfigRepository
-import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import androidx.core.content.edit
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import javax.inject.Inject
 
 class ConfigRepositoryImpl @Inject constructor(
     private val configDao: ConfigDao,
@@ -18,6 +18,7 @@ class ConfigRepositoryImpl @Inject constructor(
 
     companion object {
         private const val KEY_LOCKDOWN_END = "lockdown_end_time"
+        private const val KEY_LATEST_REPORT = "latest_weekly_report"
     }
 
     override suspend fun getAppTier(packageName: String): AppTier {
@@ -52,6 +53,24 @@ class ConfigRepositoryImpl @Inject constructor(
 
         trySend(sharedPreferences.getLong(KEY_LOCKDOWN_END, 0L))
 
+        awaitClose {
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+
+    override suspend fun setLatestWeeklyReport(report: String) {
+        sharedPreferences.edit { putString(KEY_LATEST_REPORT, report) }
+    }
+
+    override fun getLatestWeeklyReportFlow(): Flow<String?> = callbackFlow {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            if (key == KEY_LATEST_REPORT) {
+                trySend(prefs.getString(key, null))
+            }
+        }
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        trySend(sharedPreferences.getString(KEY_LATEST_REPORT, null))
         awaitClose {
             sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
         }

@@ -2,6 +2,7 @@ package com.example.focusos.presentation.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.focusos.domain.usecase.CheckAccessibilityPermissionUseCase
 import com.example.focusos.domain.usecase.CheckDefaultHomeRoleUseCase
 import com.example.focusos.domain.usecase.CheckNotificationPermissionUseCase
 import com.example.focusos.domain.usecase.CheckUsageStatsPermissionUseCase
@@ -18,6 +19,7 @@ class OnboardingViewModel @Inject constructor(
     private val checkDefaultHomeRole: CheckDefaultHomeRoleUseCase,
     private val checkUsageStatsPermission: CheckUsageStatsPermissionUseCase,
     private val checkNotificationPermission: CheckNotificationPermissionUseCase,
+    private val checkAccessibilityPermission: CheckAccessibilityPermissionUseCase,
     private val completeOnboarding: CompleteOnboardingUseCase
 ) : ViewModel() {
 
@@ -51,6 +53,11 @@ class OnboardingViewModel @Inject constructor(
             return
         }
 
+        if (!checkAccessibilityPermission()) {
+            _uiState.value = OnboardingState.NeedsAccessibility
+            return
+        }
+
         _uiState.value = OnboardingState.Complete
     }
 
@@ -58,7 +65,7 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             completeOnboarding()
 
-            _uiState.value = OnboardingState.Complete
+            _uiState.value = OnboardingState.NavigatingToHome
         }
 
     }

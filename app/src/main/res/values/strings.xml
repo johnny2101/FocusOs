@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FocusOs</string>
+    <string name="accessibility_description">FocusOS requires this to detect app switching and enforce digital wellbeing boundaries.</string>
 </resources>

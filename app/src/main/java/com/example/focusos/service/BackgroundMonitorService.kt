@@ -21,16 +21,17 @@ import com.example.focusos.domain.model.AnxietyState
 import com.example.focusos.domain.repository.ConfigRepository
 import com.example.focusos.domain.repository.UsageRepository
 import com.example.focusos.domain.usecase.AnalyzeAnxietyUseCase
+import com.example.focusos.domain.usecase.CheckAccessibilityPermissionUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.focusos.util.getAppName
 
 @AndroidEntryPoint
 class BackgroundMonitorService : Service() {
@@ -41,6 +42,9 @@ class BackgroundMonitorService : Service() {
     lateinit var analyzeAnxietyUseCase: AnalyzeAnxietyUseCase
     @Inject
     lateinit var configRepository: ConfigRepository
+
+    @Inject
+    lateinit var checkAccessibilityPermission: CheckAccessibilityPermissionUseCase
 
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
@@ -131,17 +135,6 @@ class BackgroundMonitorService : Service() {
         }
     }
 
-    private fun startUsagePoller() {
-        val usageStatManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-
-        serviceScope.launch {
-            while (isActive) {
-                checkForForegroundApp(usageStatManager)
-                delay(POLL_INTERVAL_MS)
-            }
-        }
-    }
-
     private fun checkForForegroundApp(usageStatManager: UsageStatsManager) {
         val endTime = System.currentTimeMillis()
         val startTime = endTime - 1000
@@ -164,7 +157,7 @@ class BackgroundMonitorService : Service() {
 
     private fun logEvent(packageName: String, type: EventType) {
         serviceScope.launch {
-            usageRepository.logEvent(packageName, "System", type)
+            usageRepository.logEvent(packageName, getAppName(packageName, packageManager), type)
 
             val state = analyzeAnxietyUseCase()
 
@@ -221,6 +214,18 @@ class BackgroundMonitorService : Service() {
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
+    }
+
+    private fun startUsagePoller() {
+        val usageStatManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        serviceScope.launch {
+            while (isActive) {
+                if (!checkAccessibilityPermission()) {
+                    checkForForegroundApp(usageStatManager)
+                }
+                delay(POLL_INTERVAL_MS)
+            }
+        }
     }
 
 

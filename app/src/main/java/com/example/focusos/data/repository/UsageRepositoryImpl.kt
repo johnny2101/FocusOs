@@ -4,6 +4,7 @@ import com.example.focusos.data.local.dao.UsageDao
 import com.example.focusos.data.local.entity.AppUsageEvent
 import com.example.focusos.data.local.entity.EventType
 import com.example.focusos.domain.repository.UsageRepository
+import com.example.focusos.model.PackageUsageStat
 import javax.inject.Inject
 
 class UsageRepositoryImpl @Inject constructor(
@@ -21,5 +22,20 @@ class UsageRepositoryImpl @Inject constructor(
 
     override suspend fun getEventsSince(timestamp: Long): List<AppUsageEvent> {
         return usageDao.getEventsSince(timestamp)
+    }
+
+    override suspend fun getUsageStatsInRange(
+        startTime: Long,
+        endTime: Long
+    ): List<PackageUsageStat> {
+        return usageDao.getUsageStatsInRange(startTime, endTime)
+    }
+
+    override suspend fun getEventCountByTypeInRange(
+        eventType: EventType,
+        startTime: Long,
+        endTime: Long
+    ): Int {
+        return usageDao.getEventCountByTypeInRange(eventType, startTime, endTime)
     }
 }
