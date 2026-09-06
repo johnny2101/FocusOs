@@ -1,0 +1,5 @@
+## Local SDK Configuration Example
+# Copy this file to local.properties and set your local Android SDK location.
+#
+# Location of the SDK (e.g., /Users/<username>/Library/Android/sdk or C\:\\Users\\<username>\\AppData\\Local\\Android\\Sdk)
+sdk.dir=/path/to/Android/sdk

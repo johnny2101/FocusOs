@@ -78,7 +78,10 @@ fun HomeScreen(
     Scaffold(
         containerColor = Color.Black
     ) { innerPadding ->
-        if (isLockdownActive) {
+        Box(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            if (isLockdownActive) {
             LockdownOverlay(
                 remainingTimeMs = lockdownRemainingTime,
                 safeApps = apps,
