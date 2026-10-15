@@ -48,7 +48,7 @@ flowchart TD
     UI --> VM
     VM --> UC
     UC --> REPO_INT
-    REPO_IMPL ..|> REPO_INT
+    REPO_IMPL --> REPO_INT
     REPO_IMPL --> DB
     REPO_IMPL --> PREFS
     ACCESSIBILITY --> UC
